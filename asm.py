@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 
 import urllib2, json, base64, datetime, dateutil.parser
 
@@ -8,7 +8,11 @@ class Task:
 
 	def __str__(self):
 		self.url = "https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
-		return u"%s : %s" % (self.url, self.name)
+		return u"[%s](%s)" % (self.name, self.url)
+
+	def __unicode__(self):
+		self.url = u"https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
+		return u"[%s](%s)" % (self.name, self.url)
 
 def get_tasks(user_id, workspace):
 	authorization = "%s:" % api_key
@@ -59,14 +63,14 @@ for user in users:
 				filtered_tasks['on_it'].append(task)
 				added = True
 
-	print u"%s's tasks:" % (user['name'])
-	print u"Tasks you've completed yesterday:"
+	print u"#%s's tasks:" % (user['name'])
+	print u"##Tasks you've completed yesterday:"
 	for task in filtered_tasks['yesterday']:
-		print task
+		print u"- " + task.__unicode__()
 	print u""
-	print u"Tasks you are doing:"
+	print u"##Tasks you are doing:"
 	for task in filtered_tasks['on_it']:
-		print task
+		print u"- " + task.__unicode__()
 	print u""
 	print u"---"
 	print u""
