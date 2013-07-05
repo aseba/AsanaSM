@@ -8,17 +8,18 @@ class Task:
 
 	def __str__(self):
 		self.url = "https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
-		return u"[%s](%s)" % (self.name, self.url)
+		return "[%s](%s)" % (self.name.encode('ascii', "ignore"), self.url)
 
 	def __unicode__(self):
-		self.url = u"https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
-		return u"[%s](%s)" % (self.name, self.url)
+		self.url = "https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
+		return u"[%s](%s)" % (self.name.encode('ascii', "ignore"), self.url)
 
 def get_tasks(user_id, workspace):
 	authorization = "%s:" % api_key
 	request_headers = dict()
 	request_headers["Authorization"] = "Basic %s" % base64.b64encode(authorization)
 	opener = urllib2.build_opener()
+	opener.addheaders = [('Accept-Charset', 'utf-8')]
 	opener.addheaders = request_headers.items()
 	query_url = "https://app.asana.com/api/1.0/tasks?workspace=%s&assignee=%s&opt_fields=id,name,completed,projects,completed_at,tags,assignee_status" % (workspace, user_id)
 	data = opener.open(query_url)
@@ -32,6 +33,8 @@ users = json.loads( open("users_list.json").read() )
 workspace = config['workspace']
 in_progress_tag_id = config['in_progress_tag_id']
 api_key = config['api_key']
+
+first = True
 
 for user in users:
 
@@ -63,14 +66,18 @@ for user in users:
 				filtered_tasks['on_it'].append(task)
 				added = True
 
+	if not first:
+		print u""
+		print u"---"
+		print u""
+
 	print u"#%s's tasks:" % (user['name'])
 	print u"##Tasks you've completed yesterday:"
 	for task in filtered_tasks['yesterday']:
-		print u"- " + task.__unicode__()
+		print u"- %s" % (task)
 	print u""
 	print u"##Tasks you are doing:"
 	for task in filtered_tasks['on_it']:
-		print u"- " + task.__unicode__()
-	print u""
-	print u"---"
-	print u""
+		print u"- %s" % (task)
+
+	first = False
