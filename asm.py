@@ -48,7 +48,9 @@ for user in users:
 		if task.completed_at:
 			completed_at = dateutil.parser.parse(task.completed_at).replace(hour=0, minute=0, second=0, microsecond=0)
 			now = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=completed_at.tzinfo)
-			yesterday = now - datetime.timedelta(days=1)
+			#If it is monday, yesterday should be last friday
+			tdelta = 3 if now.weekday() == 1 else 1
+			yesterday = now - datetime.timedelta(days=tdelta)
 			if task.completed and completed_at == yesterday:
 				filtered_tasks['yesterday'].append(task)
 
