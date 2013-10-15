@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import urllib2, json, base64, datetime, dateutil.parser
+import urllib2, json, base64, datetime, dateutil.parser, sys
 
 class Task:
 	def __init__(self, **entries): 
@@ -8,11 +8,13 @@ class Task:
 
 	def __str__(self):
 		self.url = "https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
-		return "[%s](%s)" % (self.name.encode('ascii', "ignore"), self.url)
+		try:
+			return u"[%s](%s) took %s" % (self.name.encode('ascii', "ignore"), self.url, self.time_taken)
+		except AttributeError:
+			return u"[%s](%s)" % (self.name.encode('ascii', "ignore"), self.url)
 
 	def __unicode__(self):
-		self.url = "https://app.asana.com/0/%s/%s" % (task.user_id, task.id)
-		return u"[%s](%s)" % (self.name.encode('ascii', "ignore"), self.url)
+		return self.__str__().encode('utf-8')
 
 def get_tasks(user_id, workspace):
 	authorization = "%s:" % api_key
@@ -21,7 +23,7 @@ def get_tasks(user_id, workspace):
 	opener = urllib2.build_opener()
 	opener.addheaders = [('Accept-Charset', 'utf-8')]
 	opener.addheaders = request_headers.items()
-	query_url = "https://app.asana.com/api/1.0/tasks?workspace=%s&assignee=%s&opt_fields=id,name,completed,projects,completed_at,tags,assignee_status" % (workspace, user_id)
+	query_url = "https://app.asana.com/api/1.0/tasks?workspace=%s&assignee=%s&opt_fields=id,name,completed,projects,completed_at,created_at,tags,assignee_status" % (workspace, user_id)
 	data = opener.open(query_url)
 	data = data.read()
 	full_tasks_list = json.loads(data)['data']
@@ -51,6 +53,7 @@ for user in users:
 			#If it is monday, yesterday should be last friday
 			tdelta = 3 if now.weekday() == 0 else 1
 			yesterday = now - datetime.timedelta(days=tdelta)
+			task.time_taken = dateutil.parser.parse(task.completed_at) - dateutil.parser.parse(task.created_at)
 			if task.completed and completed_at == yesterday:
 				filtered_tasks['yesterday'].append(task)
 
